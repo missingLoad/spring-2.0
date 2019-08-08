@@ -1,5 +1,7 @@
 package com.zrobot.formwork.aop;
 
+import net.sf.cglib.proxy.Enhancer;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
 
@@ -19,19 +21,21 @@ public class ProxyUtils {
      */
     public static Object getTargetObject(Object proxy)throws Exception{
         //先判断对象是否是代理对象
-        if (!isAopInstance(proxy)){ return proxy;}
+        if (!isAopInstance(proxy)){
+            return proxy;
+        }
 
         return getProxyTarget(proxy);
     }
 
     private static boolean isAopInstance(Object proxy){
-        return Proxy.isProxyClass(proxy.getClass());
+        return (proxy instanceof CglibProxy);
     }
 
     private static Object getProxyTarget(Object proxy)throws Exception{
-        Field h = proxy.getClass().getSuperclass().getDeclaredField("h");
+        Field h = proxy.getClass().getDeclaredField("CGLIB$CALLBACK_0");
         h.setAccessible(true);
-        AopProxy aopProxy = (AopProxy) h.get(proxy);
+        Object aopProxy =  h.get(proxy);
         Field target = aopProxy.getClass().getDeclaredField("target");
         target.setAccessible(true);
         return target.get(aopProxy);

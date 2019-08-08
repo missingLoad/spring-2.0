@@ -2,6 +2,7 @@ package com.zrobot.formwork.beans;
 
 import com.zrobot.formwork.aop.AopConfig;
 import com.zrobot.formwork.aop.AopProxy;
+import com.zrobot.formwork.core.FactoryBean;
 
 /**
  * @author weizhaoli
@@ -10,7 +11,7 @@ import com.zrobot.formwork.aop.AopProxy;
  * @description: TODO
  * @date 2019/7/30 10:37
  */
-public class BeanWarpper {
+public class BeanWarpper extends FactoryBean {
 
     private AopProxy aopProxy = new AopProxy();
 

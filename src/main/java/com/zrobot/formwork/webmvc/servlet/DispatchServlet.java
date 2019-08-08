@@ -208,6 +208,8 @@ public class DispatchServlet extends HttpServlet {
         for (String beanName : beanDefinitionNames){
             Object proxy = context.getBean(beanName);
 
+            Class<?> proxyClazz = proxy.getClass();
+
             Object controller = null;
             try {
                 controller = ProxyUtils.getTargetObject(proxy);
@@ -235,7 +237,8 @@ public class DispatchServlet extends HttpServlet {
                     RequestMapping annotation = method.getAnnotation(RequestMapping.class);
                     String regex = baseUrl + annotation.value().replace("/+", "/");
                     Pattern pattern = Pattern.compile(regex);
-                    this.handlerMappings.add(new HandlerMapping(pattern, controller, method));
+                    Method proxyMethod = proxyClazz.getMethod(method.getName(), method.getParameterTypes());
+                    this.handlerMappings.add(new HandlerMapping(pattern, proxy, proxyMethod));
                     System.out.println("Mapping: " + regex + " , " + method);
 
                 }

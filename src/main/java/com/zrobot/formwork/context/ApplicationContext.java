@@ -4,6 +4,7 @@ import com.zrobot.formwork.annotation.Autowired;
 import com.zrobot.formwork.annotation.Controller;
 import com.zrobot.formwork.annotation.Service;
 import com.zrobot.formwork.aop.AopConfig;
+import com.zrobot.formwork.aop.ProxyUtils;
 import com.zrobot.formwork.beans.BeanDefinition;
 import com.zrobot.formwork.beans.BeanPostProcessor;
 import com.zrobot.formwork.beans.BeanWarpper;
@@ -65,6 +66,8 @@ public class ApplicationContext extends DefaultListableBeanFactory implements Be
     }
 
     private void doAutowired() {
+
+        //初始化所有的对象
         for (Map.Entry<String, BeanDefinition> entry : this.beanDefinitionMap.entrySet()){
             String key = entry.getKey();
             if (!entry.getValue().isLazyInit()){
@@ -72,20 +75,43 @@ public class ApplicationContext extends DefaultListableBeanFactory implements Be
                 System.out.println(bean.getClass());
             }
         }
+
+        for (Map.Entry<String, BeanWarpper> entry : this.beanWarpperMap.entrySet()){
+            populateBean(entry.getKey(), entry.getValue().getWrappedInstance());
+        }
     }
 
     public void populateBean(String beanName, Object instance){
-        Class<?> clazz = instance.getClass();
+        Class<?> proxyClazz = instance.getClass();
+        Object target = null;
+        try {
+            target = ProxyUtils.getTargetObject(instance);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Class clazz = target.getClass();
+
         if (!(clazz.isAnnotationPresent(Controller.class) || clazz.isAnnotationPresent(Service.class))){
             return;
         }
 
         Field[] fields = clazz.getDeclaredFields();
 
+//        Field[] declaredFields = proxyClazz.getDeclaredFields();
+
         for (Field field : fields){
             if (!field.isAnnotationPresent(Autowired.class)){
                 continue;
             }
+
+//            Field proxyField = null;
+
+//            try {
+//                proxyField = proxyClazz.getDeclaredField(field.getName());
+//            } catch (NoSuchFieldException e) {
+//                e.printStackTrace();
+//            }
 
             Autowired autowired = field.getAnnotation(Autowired.class);
 
@@ -96,9 +122,12 @@ public class ApplicationContext extends DefaultListableBeanFactory implements Be
             }
 
             field.setAccessible(true);
+//            proxyField.setAccessible(true);
 
             try {
+
                 field.set(instance, this.beanWarpperMap.get(autowiredBeanName).getWrappedInstance());
+//                field.set(target,this.beanWarpperMap.get(autowiredBeanName).getRootObject());
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
@@ -138,6 +167,11 @@ public class ApplicationContext extends DefaultListableBeanFactory implements Be
 
     @Override
     public Object getBean(String name) {
+
+        if (this.beanWarpperMap.containsKey(name)){
+            return this.beanWarpperMap.get(name).getWrappedInstance();
+        }
+
         BeanDefinition beanDefinition = this.beanDefinitionMap.get(name);
 
         try {
@@ -157,7 +191,7 @@ public class ApplicationContext extends DefaultListableBeanFactory implements Be
 
             beanPostProcessor.postProcessAfterInitialization(o, name);
 
-            populateBean(name, o);
+//            populateBean(name, o);
             return this.beanWarpperMap.get(name).getWrappedInstance();
 
         } catch (Exception e){

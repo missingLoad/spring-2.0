@@ -66,6 +66,8 @@ public class HandlerAdapter {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
             e.printStackTrace();
+        }catch (Exception e){
+            e.printStackTrace();
         }
 
         //执行方法

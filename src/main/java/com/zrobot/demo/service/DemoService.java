@@ -1,5 +1,6 @@
 package com.zrobot.demo.service;
 
+import com.sun.org.apache.regexp.internal.RE;
 import com.zrobot.formwork.annotation.Service;
 
 /**
@@ -12,7 +13,5 @@ import com.zrobot.formwork.annotation.Service;
 @Service
 public class DemoService {
 
-    public String testDemo(){
-        return "ccc";
-    }
+    public String testDemo(){return  "xccsdsa";}
 }
